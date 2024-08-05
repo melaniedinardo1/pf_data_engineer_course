@@ -9,13 +9,27 @@ load_dotenv()
 
 # Configuración de la API de OpenWeatherMap
 API_KEY = os.getenv('API_KEY')
-BASE_URL = 'http://api.openweathermap.org/data/2.5/weather?lat=-32.9468&lon=-60.6393'
-LOCATION = 'Rosario'
+BASE_URL = 'http://api.openweathermap.org/data/2.5/weather'
+
+# Lista de ciudades con sus coordenadas
+cities = [
+    {"name": "Rosario", "lat": -32.9468, "lon": -60.6393},
+    {"name": "Buenos Aires", "lat": -34.6132, "lon": -58.3772},
+    {"name": "Barcelona", "lat": 41.3888, "lon": 2.159},
+    {"name": "New York", "lat": 43.0004, "lon": -75.4999},
+    {"name": "London", "lat": 51.5085, "lon": -0.1257},
+    {"name": "Paris", "lat": 48.8534, "lon": 2.3488},
+    {"name": "Berlin", "lat": 52.5244, "lon": 13.4105},
+    {"name": "Rome", "lat": 41.8947, "lon": 12.4839},
+    {"name": "Miami", "lat": 25.7743, "lon": -80.1937},
+    {"name": "Bangkok", "lat": 13.75, "lon": 100.5167}
+]
 
 # Función para extraer datos de la API
-def fetch_weather_data(api_key, location):
+def fetch_weather_data(api_key, lat, lon):
     params = {
-        'q': location,
+        'lat': lat,
+        'lon': lon,
         'appid': api_key,
         'units': 'metric'
     }
@@ -69,17 +83,16 @@ def connect_to_redshift():
 
 # Main function
 def main():
-    # Extraer datos de la API
-    weather_data = fetch_weather_data(API_KEY, LOCATION)
-
     # Conectar a Redshift
     conn = connect_to_redshift()
 
     # Crear tabla en Redshift
     create_redshift_table(conn)
 
-    # Insertar datos en Redshift
-    insert_data_to_redshift(conn, weather_data)
+    # Extraer y cargar datos para cada ciudad
+    for city in cities:
+        weather_data = fetch_weather_data(API_KEY, city["lat"], city["lon"])
+        insert_data_to_redshift(conn, weather_data)
 
     # Cerrar conexión
     conn.close()
